@@ -1,0 +1,208 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Carga de Conceptos Intratrimestrales</title>
+  <style>
+    :root {
+      --primary: #4CAF50;
+      --bg: #f4f4f9;
+      --border: #ddd;
+    }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: var(--bg);
+      margin: 0; padding: 20px;
+      display: flex; justify-content: center;
+    }
+    .container {
+      background: white; padding: 20px 30px; border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 100%; max-width: 600px;
+    }
+    .hidden { display: none; }
+    h2 { color: #333; text-align: center; }
+    label { font-weight: bold; margin-top: 10px; display: block; }
+    input, select, button {
+      width: 100%; padding: 10px; margin-top: 5px;
+      border: 1px solid var(--border); border-radius: 4px; box-sizing: border-box;
+    }
+    button {
+      background-color: var(--primary); color: white; border: none;
+      cursor: pointer; font-weight: bold; margin-top: 15px;
+    }
+    button:hover { background-color: #45a049; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { border: 1px solid var(--border); padding: 10px; text-align: left; }
+    th { background-color: var(--bg); }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    
+  <!-- Módulo de Autenticación -->
+  <!-- Módulo de Acceso -->
+    <div id="login-section">
+      <h2>Acceso al Sistema</h2>
+      
+      <!-- Ingreso libre para docentes -->
+      <button onclick="ingresoDocente()" style="background-color: #2196F3; margin-bottom: 20px;">Ingresar como Docente (Acceso Directo)</button>
+      
+      <hr style="border: 0; border-top: 1px solid var(--border); margin: 20px 0;">
+      
+      <!-- Ingreso restringido para administrador -->
+      <label for="password">Acceso Administrador:</label>
+      <input type="password" id="password" placeholder="Ingrese la contraseña">
+      <button onclick="loginAdmin()">Ingresar como Administrador</button>
+    </div>
+    <!-- Módulo Principal de la Aplicación -->
+    <div id="app-section" class="hidden">
+      <h2>Carga de Conceptos</h2>
+      
+      <label for="ano">Año/Curso:</label>
+      <select id="ano">
+        <option value="" disabled selected>Seleccione el año</option>
+        <option value="1ro">1er Año</option>
+        <option value="2do">2do Año</option>
+        <option value="3ro">3er Año</option>
+      </select>
+
+      <label for="materia">Materia:</label>
+      <select id="materia">
+        <option value="" disabled selected>Seleccione la materia</option>
+        <option value="Matematicas">Matemáticas</option>
+        <option value="Lengua">Lengua</option>
+        <option value="Historia">Historia</option>
+      </select>
+
+      <button onclick="cargarAlumnos()">Desplegar Lista de Alumnos</button>
+
+      <!-- Tabla Dinámica -->
+      <div id="alumnos-section" class="hidden">
+        <table id="tabla-alumnos">
+          <thead>
+            <tr>
+              <th>Alumno</th>
+              <th>Concepto</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+        <button onclick="guardarDatos()" id="btn-guardar">Enviar a Planilla</button>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // 1. Configuración de variables globales
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbyECbHGpVC1dZIkKglZtMQeRT20meW-Tj6_LzxYRd-vZjGQnLpbSgt0wRdE_W3H9QVxEw/exec';
+    
+    // Simulación de base de datos de alumnos (Se puede migrar a un JSON externo)
+    const baseAlumnos = {
+      "1ro": ["Álvarez, Mateo", "Gómez, Sofía", "López, Martín"],
+      "2do": ["Díaz, Valentina", "Pérez, Juan", "Romero, Lucía"],
+      "3ro": ["Fernández, Tomás", "García, Camila"]
+    };
+
+    // 2. Lógica de Autenticación Básica
+    // Lógica de ingreso directo para docentes
+    function ingresoDocente() {
+      document.getElementById('login-section').classList.add('hidden');
+      document.getElementById('app-section').classList.remove('hidden');
+    }
+
+    // Lógica de ingreso restringido para administrador
+    function loginAdmin() {
+      const pass = document.getElementById('password').value;
+      
+      if (pass === 'admin0000') { 
+        document.getElementById('login-section').classList.add('hidden');
+        document.getElementById('app-section').classList.remove('hidden');
+        
+        // Aquí se pueden habilitar futuras funciones exclusivas de control del administrador
+        alert('Sesión iniciada como Administrador.');
+      } else {
+        alert('Contraseña incorrecta. Acceso denegado.');
+      }
+    }
+
+    // 3. Renderizado de la lista de alumnos
+    function cargarAlumnos() {
+      const ano = document.getElementById('ano').value;
+      const materia = document.getElementById('materia').value;
+      const tbody = document.querySelector('#tabla-alumnos tbody');
+      
+      if (!ano || !materia) {
+        alert("Por favor, seleccione Año y Materia.");
+        return;
+      }
+
+      tbody.innerHTML = ''; // Limpiar tabla previa
+
+      if (baseAlumnos[ano]) {
+        baseAlumnos[ano].forEach(alumno => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${alumno}</td>
+            <td>
+              <select class="nota" data-alumno="${alumno}">
+                <option value="REGULAR">REGULAR</option>
+                <option value="BIEN">BIEN</option>
+                <option value="MUY BIEN">MUY BIEN</option>
+                <option value="EXCELENTE">EXCELENTE</option>
+              </select>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+        document.getElementById('alumnos-section').classList.remove('hidden');
+      }
+    }
+
+    // 4. Recopilación de datos y envío al Backend (GAS)
+    function guardarDatos() {
+      const btnGuardar = document.getElementById('btn-guardar');
+      btnGuardar.innerText = "Guardando...";
+      btnGuardar.disabled = true;
+
+      const ano = document.getElementById('ano').value;
+      const materia = document.getElementById('materia').value;
+      const selects = document.querySelectorAll('.nota');
+      const datos = [];
+
+      selects.forEach(select => {
+        datos.push({
+          alumno: select.getAttribute('data-alumno'),
+          nota: select.value,
+          ano: ano,
+          materia: materia
+        });
+      });
+
+      // Fetch API con text/plain para evitar bloqueos CORS con Apps Script
+      fetch(scriptURL, {
+        method: 'POST',
+        body: JSON.stringify(datos),
+        headers: {
+          'Content-Type': 'text/plain;charset=utf-8',
+        }
+      })
+      .then(response => {
+        alert('Los conceptos se han registrado correctamente en la planilla.');
+        document.getElementById('alumnos-section').classList.add('hidden');
+      })
+      .catch(error => {
+        alert('Error en la conexión. Verifique la consola.');
+        console.error('Error!', error.message);
+      })
+      .finally(() => {
+        btnGuardar.innerText = "Enviar a Planilla";
+        btnGuardar.disabled = false;
+      });
+    }
+  </script>
+</body>
+</html>
